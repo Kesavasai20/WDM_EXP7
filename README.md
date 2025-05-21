@@ -1,97 +1,82 @@
-### EX7 Implementation of Link Analysis using HITS Algorithm
-### DATE: 
-### AIM: To implement Link Analysis using HITS Algorithm in Python.
-### Description:
+## EX6 Information Retrieval Using Vector Space Model in Python
+### AIM: To implement Information Retrieval Using Vector Space Model in Python.
+### Description: 
 <div align = "justify">
-The HITS (Hyperlink-Induced Topic Search) algorithm is a link analysis algorithm used to rank web pages. It identifies authority and hub pages 
-in a network of web pages based on the structure of the links between them.
+Implementing Information Retrieval using the Vector Space Model in Python involves several steps, including preprocessing text data, constructing a term-document matrix, 
+calculating TF-IDF scores, and performing similarity calculations between queries and documents. Below is a basic example using Python and libraries like nltk and 
+sklearn to demonstrate Information Retrieval using the Vector Space Model.
 
 ### Procedure:
-1. ***Initialization:***
-    <p>    a) Start with an initial set of authority and hub scores for each page.
-    <p>    b) Typically, initial scores are set to 1 or some random values.
-  
-2. ***Construction of the Adjacency Matrix:***
-    <p>    a) The web graph is represented as an adjacency matrix where each row and column correspond to a web page, and the matrix elements denote the presence or absence of links between pages.
-    <p>    b) If page A has a link to page B, the corresponding element in the adjacency matrix is set to 1; otherwise, it's set to 0.
-
-3. ***Iterative Updates:***
-    <p>    a) Update the authority scores based on the hub scores of pages pointing to them and update the hub scores based on the authority scores of pages they point to.
-    <p>    b) Calculate authority scores as the sum of hub scores of pages pointing to the given page.
-    <p>    c) Calculate hub scores as the sum of authority scores of pages that the given page points to.
-
-4. ***Normalization:***
-    <p>    a) Normalize authority and hub scores to prevent them from becoming too large or small.
-    <p>    b) Normalize by dividing by their Euclidean norms (L2-norm).
-
-5. ***Convergence Check:***
-    <p>    a) Check for convergence by measuring the change in authority and hub scores between iterations.
-    <p>    b) If the change falls below a predefined threshold or the maximum number of iterations is reached, the algorithm stops.
-
-6. ***Visualization:***
-    <p>    Visualize using bar chart to represent authority and hub scores.
+1. Define sample documents.
+2. Preprocess text data by tokenizing, removing stopwords, and punctuation.
+3. Construct a TF-IDF matrix using TfidfVectorizer from sklearn.
+4. Define a search function that calculates cosine similarity between a query and documents based on the TF-IDF matrix.
+5. Execute a sample query and display the search results along with similarity scores.
 
 ### Program:
 
 ```python
-import numpy as np
-import matplotlib.pyplot as plt
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+from nltk.tokenize import word_tokenize
+from nltk.corpus import stopwords
+import string
 
-def hits_algorithm(adjacency_matrix, max_iterations=100, tol=1.0e-6):
-    num_nodes = len(adjacency_matrix)
-    authority_scores = np.ones(num_nodes)
-    hub_scores = np.ones(num_nodes)
-    
-    for i in range(max_iterations):
-        # Authority update
+# Sample documents
+documents = [
+    "This is the first document.",
+    "This document is the second document.",
+    "And this is the third one.",
+    "Is this the first document?",
+]
 
-             /*WRITE YOUR CODE HERE
-        
-        # Hub update
+# Preprocessing function to tokenize and remove stopwords/punctuation
+def preprocess_text(text):
+    tokens = word_tokenize(text.lower())
+    tokens = [token for token in tokens if token not in stopwords.words("english") and token not in string.punctuation]
+    return " ".join(tokens)
+    print(tokens)
 
-             /*WRITE YOUR CODE HERE
-        
-        # Check convergence
+# Preprocess documents
+preprocessed_docs = [preprocess_text(doc) for doc in documents]
 
-             /*WRITE YOUR CODE HERE
-        
-        if authority_diff < tol and hub_diff < tol:
-            break
-        
-        authority_scores = new_authority_scores
-        hub_scores = new_hub_scores
-    
-    return authority_scores, hub_scores
+# Construct TF-IDF matrix
+tfidf_vectorizer = TfidfVectorizer()
+tfidf_matrix = tfidf_vectorizer.fit_transform(preprocessed_docs)
 
-# Example adjacency matrix (replace this with your own data)
-# For simplicity, using a random adjacency matrix
-adj_matrix = np.array([
-    [0, 1, 1],
-    [1, 0, 0],
-    [1, 0, 0]
-])
 
-# Run HITS algorithm
-authority, hub = hits_algorithm(adj_matrix)
-for i in range(len(authority)):
-    print(f"Node {i}: Authority Score = {authority[i]:.4f}, Hub Score = {hub[i]:.4f}")
+# Calculate cosine similarity between query and documents
+def search(query, tfidf_matrix, tfidf_vectorizer):
+    preprocessed_query = preprocess_text(query)
+    query_vector = tfidf_vectorizer.transform([preprocessed_query])
 
-# bar chart of authority vs hub scores
+    # Calculate cosine similarity between query and documents
+    similarity_scores = cosine_similarity(query_vector, tfidf_matrix)
 
-nodes = np.arange(len(authority))
-bar_width = 0.35
-plt.figure(figsize=(8, 6))
-plt.bar(nodes - bar_width/2, authority, bar_width, label='Authority', color='blue')
-plt.bar(nodes + bar_width/2, hub, bar_width, label='Hub', color='green')
-plt.xlabel('Node')
-plt.ylabel('Scores')
-plt.title('Authority and Hub Scores for Each Node')
-plt.xticks(nodes, [f'Node {i}' for i in nodes])
-plt.legend()
-plt.tight_layout()
-plt.show()
+    # Sort documents based on similarity scores
+    sorted_indexes = similarity_scores.argsort()[0][::-1]
+
+    # Return sorted documents along with their similarity scores
+    results = [(documents[i], similarity_scores[0, i]) for i in sorted_indexes]
+    return results
+# Example query
+query =input("Enter query: ")
+
+# Perform search
+search_results = search(query, tfidf_matrix, tfidf_vectorizer)
+
+# Display search results
+i=1
+for result in search_results:
+    print("----------------------")
+    print("\nRank: ",i)
+    print("Document:", result[0])
+    print("Similarity Score:", result[1])
+
+    i=i+1
 ```
-
 ### Output:
+![image](https://github.com/21005984/WDM_EXP6/assets/94748389/eaea3a2e-9317-4e73-83f2-d8153afef6d5)
 
 ### Result:
+Thus, the implementation of Information Retrieval Using Vector Space Model in Python is executed successfully.
