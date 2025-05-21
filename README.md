@@ -1,82 +1,116 @@
-## EX6 Information Retrieval Using Vector Space Model in Python
-### AIM: To implement Information Retrieval Using Vector Space Model in Python.
-### Description: 
+### EX7 Implementation of Link Analysis using HITS Algorithm
+### AIM: To implement Link Analysis using HITS Algorithm in Python.
+### Description:
 <div align = "justify">
-Implementing Information Retrieval using the Vector Space Model in Python involves several steps, including preprocessing text data, constructing a term-document matrix, 
-calculating TF-IDF scores, and performing similarity calculations between queries and documents. Below is a basic example using Python and libraries like nltk and 
-sklearn to demonstrate Information Retrieval using the Vector Space Model.
+The HITS (Hyperlink-Induced Topic Search) algorithm is a link analysis algorithm used to rank web pages. It identifies authority and hub pages 
+in a network of web pages based on the structure of the links between them.
 
 ### Procedure:
-1. Define sample documents.
-2. Preprocess text data by tokenizing, removing stopwords, and punctuation.
-3. Construct a TF-IDF matrix using TfidfVectorizer from sklearn.
-4. Define a search function that calculates cosine similarity between a query and documents based on the TF-IDF matrix.
-5. Execute a sample query and display the search results along with similarity scores.
+1. ***Initialization:***
+    <p>    a) Start with an initial set of authority and hub scores for each page.
+    <p>    b) Typically, initial scores are set to 1 or some random values.
+  
+2. ***Construction of the Adjacency Matrix:***
+    <p>    a) The web graph is represented as an adjacency matrix where each row and column correspond to a web page, and the matrix elements denote the presence or absence of links between pages.
+    <p>    b) If page A has a link to page B, the corresponding element in the adjacency matrix is set to 1; otherwise, it's set to 0.
+
+3. ***Iterative Updates:***
+    <p>    a) Update the authority scores based on the hub scores of pages pointing to them and update the hub scores based on the authority scores of pages they point to.
+    <p>    b) Calculate authority scores as the sum of hub scores of pages pointing to the given page.
+    <p>    c) Calculate hub scores as the sum of authority scores of pages that the given page points to.
+
+4. ***Normalization:***
+    <p>    a) Normalize authority and hub scores to prevent them from becoming too large or small.
+    <p>    b) Normalize by dividing by their Euclidean norms (L2-norm).
+
+5. ***Convergence Check:***
+    <p>    a) Check for convergence by measuring the change in authority and hub scores between iterations.
+    <p>    b) If the change falls below a predefined threshold or the maximum number of iterations is reached, the algorithm stops.
+
+6. ***Visualization:***
+    <p>    Visualize using bar chart to represent authority and hub scores.
 
 ### Program:
 
 ```python
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
-from nltk.tokenize import word_tokenize
-from nltk.corpus import stopwords
-import string
+import numpy as np
+import matplotlib.pyplot as plt
 
-# Sample documents
-documents = [
-    "This is the first document.",
-    "This document is the second document.",
-    "And this is the third one.",
-    "Is this the first document?",
-]
+def hits_algorithm(adjacency_matrix, max_iterations=100, tol=1.0e-6):
+    num_nodes = len(adjacency_matrix)
+    authority_scores = np.ones(num_nodes)
+    hub_scores = np.ones(num_nodes)
 
-# Preprocessing function to tokenize and remove stopwords/punctuation
-def preprocess_text(text):
-    tokens = word_tokenize(text.lower())
-    tokens = [token for token in tokens if token not in stopwords.words("english") and token not in string.punctuation]
-    return " ".join(tokens)
-    print(tokens)
+    for i in range(max_iterations):
+        # Authority update
+        new_authority_scores = np.dot(adjacency_matrix.T, hub_scores)
+        new_authority_scores /= np.linalg.norm(new_authority_scores, ord=2)  # Normalizing
 
-# Preprocess documents
-preprocessed_docs = [preprocess_text(doc) for doc in documents]
+        # Hub update
+        new_hub_scores = np.dot(adjacency_matrix, new_authority_scores)
+        new_hub_scores /= np.linalg.norm(new_hub_scores, ord=2)  # Normalizing
 
-# Construct TF-IDF matrix
-tfidf_vectorizer = TfidfVectorizer()
-tfidf_matrix = tfidf_vectorizer.fit_transform(preprocessed_docs)
+        # Check convergence
+        authority_diff = np.linalg.norm(new_authority_scores - authority_scores, ord=2)
+        hub_diff = np.linalg.norm(new_hub_scores - hub_scores, ord=2)
 
+        if authority_diff < tol and hub_diff < tol:
+            break
 
-# Calculate cosine similarity between query and documents
-def search(query, tfidf_matrix, tfidf_vectorizer):
-    preprocessed_query = preprocess_text(query)
-    query_vector = tfidf_vectorizer.transform([preprocessed_query])
+        authority_scores = new_authority_scores
+        hub_scores = new_hub_scores
 
-    # Calculate cosine similarity between query and documents
-    similarity_scores = cosine_similarity(query_vector, tfidf_matrix)
+    return authority_scores, hub_scores
 
-    # Sort documents based on similarity scores
-    sorted_indexes = similarity_scores.argsort()[0][::-1]
+# Example adjacency matrix (replace this with your own data)
+# For simplicity, using a random adjacency matrix
+adj_matrix = np.array([
+    [0, 1, 1],
+    [0, 0, 1],
+    [1, 1, 0]
+])
 
-    # Return sorted documents along with their similarity scores
-    results = [(documents[i], similarity_scores[0, i]) for i in sorted_indexes]
-    return results
-# Example query
-query =input("Enter query: ")
+# Run HITS algorithm
+authority, hub = hits_algorithm(adj_matrix)
+for i in range(len(authority)):
+    print(f"Node {i}: Authority Score = {authority[i]:.4f}, Hub Score = {hub[i]:.4f}")
 
-# Perform search
-search_results = search(query, tfidf_matrix, tfidf_vectorizer)
+i=0
+j=1
+for i in range(len(authority)):
 
-# Display search results
-i=1
-for result in search_results:
-    print("----------------------")
-    print("\nRank: ",i)
-    print("Document:", result[0])
-    print("Similarity Score:", result[1])
+    for j in range(len(authority)):
+        if(authority[i]>=authority[j]):
+            out=authority[i];
+            authority[i]=authority[j]
+            authority[j]=out
+        if(hub[i]>hub[j]):
+            out=hub[i]
+            hub[i]=hub[j]
+            hub[j]=out
 
-    i=i+1
+print("Ranking based on Hub Scores:")
+for i in range(len(authority)):
+    print("Rank" ,i+1,hub[i])
+# bar chart of authority vs hub scores
+
+nodes = np.arange(len(authority))
+bar_width = 0.35
+plt.figure(figsize=(8, 6))
+plt.bar(nodes - bar_width/2, authority, bar_width, label='Authority', color='blue')
+plt.bar(nodes + bar_width/2, hub, bar_width, label='Hub', color='green')
+plt.xlabel('Node')
+plt.ylabel('Scores')
+plt.title('Authority and Hub Scores for Each Node')
+plt.xticks(nodes, [f'Node {i}' for i in nodes])
+plt.legend()
+plt.tight_layout()
+plt.show()
 ```
+
 ### Output:
-![image](https://github.com/21005984/WDM_EXP6/assets/94748389/eaea3a2e-9317-4e73-83f2-d8153afef6d5)
+
+![image](https://github.com/user-attachments/assets/b41254c3-3820-458f-a6f5-4d7acbd83691)
 
 ### Result:
-Thus, the implementation of Information Retrieval Using Vector Space Model in Python is executed successfully.
+Thus, The Link Analysis using HITS Algorithm in Python is successfully implemented.
